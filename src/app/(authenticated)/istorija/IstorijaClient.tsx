@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import Modal from "@/components/Modal";
 
@@ -59,7 +58,6 @@ export default function IstorijaClient({
   const [logs] = useState<AuditLog[]>(initialLogs);
   const [confirmLog, setConfirmLog] = useState<AuditLog | null>(null);
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const handleRevert = async () => {
     if (!confirmLog) return;
