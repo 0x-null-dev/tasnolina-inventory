@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(cuid())
+  username  String     @unique
+  password  String
+  createdAt DateTime   @default(now())
+  actions   AuditLog[]
+}
+
+model Product {
+  id               String             @id @default(cuid())
+  name             String
+  price            Float
+  amount           Int                @default(0)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  auditLogs        AuditLog[]
+  deliveryItems    DeliveryItem[]
+  calculationItems CalculationItem[]
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id])
+  action      String
+  description String
+  snapshot    Json
+  createdAt   DateTime @default(now())
+}
+
+model Delivery {
+  id           String         @id @default(cuid())
+  number       String         @unique
+  dateIssued   DateTime
+  supplier     String
+  buyer        String         @default("Radnja u Bulevaru kralja Aleksandra 86/90 Beograd")
+  issuedBy     String?
+  receivedBy   String?
+  affectsStock Boolean        @default(false)
+  items        DeliveryItem[]
+  total        Float          @default(0)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model DeliveryItem {
+  id          String   @id @default(cuid())
+  deliveryId  String
+  delivery    Delivery @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id])
+  productName String
+  unit        String   @default("kom")
+  quantity    Int
+  price       Float
+  total       Float
+}
+
+model Calculation {
+  id                String            @id @default(cuid())
+  number            String            @unique
+  deliveryNumber    String?
+  dateIssued        DateTime
+  affectsStock      Boolean           @default(false)
+  signedBy          String?
+  responsiblePerson String?
+  items             CalculationItem[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+}
+
+model CalculationItem {
+  id                String      @id @default(cuid())
+  calculationId     String
+  calculation       Calculation @relation(fields: [calculationId], references: [id], onDelete: Cascade)
+  productId         String?
+  product           Product?    @relation(fields: [productId], references: [id])
+  productName       String
+  unit              String      @default("kom")
+  quantity          Int
+  pricePerUnit      Float
+  goodsValue        Float
+  dependentCosts    Float       @default(0)
+  priceDifference   Float       @default(0)
+  sellingPriceNoVat Float
+  vatRate           Float       @default(0.20)
+  vatAmount         Float
+  sellingPriceVat   Float
+  sellingPriceUnit  Float
+  note              String?
+}

@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tasnolina-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: tasnolina
+      POSTGRES_PASSWORD: tasnolina
+      POSTGRES_DB: tasnolina_inventory
+    ports:
+      - '5433:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
