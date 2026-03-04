@@ -1,8 +1,12 @@
-export default function MagacinPage() {
-  return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-900">Magacin</h1>
-      <p className="text-gray-500 mt-1">Pregled svih proizvoda</p>
-    </div>
-  );
+import { prisma } from "@/lib/prisma";
+import InventoryClient from "./InventoryClient";
+
+export const dynamic = "force-dynamic";
+
+export default async function MagacinPage() {
+  const products = await prisma.product.findMany({
+    orderBy: { name: "asc" },
+  });
+
+  return <InventoryClient initialProducts={products} />;
 }

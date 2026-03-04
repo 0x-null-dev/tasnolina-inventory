@@ -19,7 +19,10 @@ body {
 
 /* Print styles */
 @media print {
-  .no-print {
+  .no-print,
+  aside,
+  header,
+  nav {
     display: none !important;
   }
 
@@ -29,8 +32,17 @@ body {
     print-color-adjust: exact;
   }
 
+  main {
+    margin-left: 0 !important;
+    padding: 0 !important;
+  }
+
   .print-only {
     display: block !important;
+  }
+
+  table {
+    font-size: 12px;
   }
 }
 

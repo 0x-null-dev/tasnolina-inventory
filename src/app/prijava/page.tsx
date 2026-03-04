@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -33,9 +34,15 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-red-600">Tasnolina</h1>
-          <p className="text-gray-500 mt-1">Inventar</p>
+        <div className="flex flex-col items-center mb-8">
+          <Image
+            src="/logo.webp"
+            alt="Tasnolina"
+            width={160}
+            height={80}
+            priority
+          />
+          <p className="text-gray-500 mt-2">Inventar</p>
         </div>
 
         <form

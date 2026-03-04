@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -20,11 +21,14 @@ export default function Navigation() {
     <>
       {/* Desktop sidebar */}
       <aside className="hidden md:flex md:flex-col md:w-56 bg-white border-r border-gray-200 min-h-screen fixed left-0 top-0 z-30">
-        <div className="p-5 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-red-600 tracking-tight">
-            Tasnolina
-          </h1>
-          <p className="text-xs text-gray-400 mt-0.5">Inventar</p>
+        <div className="p-4 border-b border-gray-200 flex items-center justify-center">
+          <Image
+            src="/logo.webp"
+            alt="Tasnolina"
+            width={120}
+            height={60}
+            priority
+          />
         </div>
         <nav className="flex-1 p-3 space-y-1">
           {navItems.map((item) => {
@@ -57,7 +61,7 @@ export default function Navigation() {
       {/* Mobile top bar */}
       <header className="md:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-30">
         <div className="flex items-center justify-between px-4 h-14">
-          <h1 className="text-lg font-bold text-red-600">Tasnolina</h1>
+          <Image src="/logo.webp" alt="Tasnolina" width={100} height={50} priority />
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="p-2 rounded-lg hover:bg-gray-100"
