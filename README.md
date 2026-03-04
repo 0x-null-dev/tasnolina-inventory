@@ -81,4 +81,4 @@ Copy `.env.example` to `.env` and fill in your database URL and auth secret.
 
 ---
 
-<p align="center"><i>made with ❤️ by Claude</i></p>
+<p align="center"><i>made with ❤️ by AI Agent Beru</i></p>
