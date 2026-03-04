@@ -82,7 +82,7 @@ export default function IstorijaClient({
     toast.success("Stanje magacina vraceno");
     setConfirmLog(null);
     setLoading(false);
-    router.push("/magacin");
+    window.location.href = "/magacin";
   };
 
   return (
@@ -128,12 +128,14 @@ export default function IstorijaClient({
                     </div>
                     <p className="text-sm text-gray-700">{log.description}</p>
                   </div>
-                  <button
-                    onClick={() => setConfirmLog(log)}
-                    className="shrink-0 px-3 py-2 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors whitespace-nowrap"
-                  >
-                    Vrati na ovo stanje
-                  </button>
+                  {log.action !== "OTPREMNICA" && log.action !== "KALKULACIJA" && (
+                    <button
+                      onClick={() => setConfirmLog(log)}
+                      className="shrink-0 px-3 py-2 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors whitespace-nowrap"
+                    >
+                      Vrati na ovo stanje
+                    </button>
+                  )}
                 </div>
               </div>
             );

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import Modal from "@/components/Modal";
 
@@ -22,6 +23,7 @@ export default function InventoryClient({
   initialProducts: Product[];
 }) {
   const [products, setProducts] = useState<Product[]>(initialProducts);
+  const router = useRouter();
   const [addOpen, setAddOpen] = useState(false);
   const [editModal, setEditModal] = useState<{
     product: Product;
@@ -83,6 +85,7 @@ export default function InventoryClient({
     setAddOpen(false);
     setAddLoading(false);
     toast.success(`"${product.name}" dodat u magacin`);
+    router.refresh();
   };
 
   // --- Delete product ---
@@ -110,6 +113,7 @@ export default function InventoryClient({
     setDeleteProduct(null);
     setDeleteLoading(false);
     toast.success(`"${name}" obrisan iz magacina`);
+    router.refresh();
   };
 
   // --- Edit price/amount ---
@@ -160,6 +164,7 @@ export default function InventoryClient({
         ? `Cena za "${updated.name}" azurirana`
         : `Kolicina za "${updated.name}" azurirana`
     );
+    router.refresh();
   };
 
   return (

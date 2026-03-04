@@ -41,8 +41,23 @@ body {
     display: block !important;
   }
 
+  .no-print-input {
+    display: none !important;
+  }
+
+  .print-empty-row {
+    display: none !important;
+  }
+
   table {
     font-size: 12px;
+  }
+
+  /* Remove card styling in print */
+  .bg-white {
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
   }
 }
 
