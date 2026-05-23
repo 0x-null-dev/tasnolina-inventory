@@ -35,6 +35,30 @@ export default function InventoryClient({
     0
   );
 
+  // --- Pagination ---
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number | "all">(25);
+
+  const totalPages =
+    pageSize === "all" ? 1 : Math.max(1, Math.ceil(products.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const startIndex = pageSize === "all" ? 0 : (currentPage - 1) * pageSize;
+  const endIndex =
+    pageSize === "all" ? products.length : startIndex + pageSize;
+  const visibleProducts = products.slice(startIndex, endIndex);
+
+  const handlePrint = () => {
+    const prevPage = page;
+    const prevSize = pageSize;
+    setPageSize("all");
+    setPage(1);
+    setTimeout(() => {
+      window.print();
+      setPage(prevPage);
+      setPageSize(prevSize);
+    }, 50);
+  };
+
   // --- Add product ---
   const [addName, setAddName] = useState("");
   const [addPrice, setAddPrice] = useState("");
@@ -180,7 +204,7 @@ export default function InventoryClient({
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => window.print()}
+            onClick={handlePrint}
             className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
             Stampaj
@@ -234,6 +258,9 @@ export default function InventoryClient({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
+                <th className="text-right px-4 py-3 font-semibold text-gray-700 w-[1%] whitespace-nowrap">
+                  #
+                </th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">
                   Naziv proizvoda
                 </th>
@@ -253,18 +280,21 @@ export default function InventoryClient({
               {products.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="text-center py-12 text-gray-400"
                   >
                     Nema proizvoda u magacinu
                   </td>
                 </tr>
               ) : (
-                products.map((p) => (
+                visibleProducts.map((p, i) => (
                   <tr
                     key={p.id}
                     className="border-b border-gray-100 hover:bg-gray-50/50"
                   >
+                    <td className="px-4 py-3 text-right text-gray-500 tabular-nums whitespace-nowrap">
+                      {startIndex + i + 1}
+                    </td>
                     <td className="px-4 py-3 text-gray-900 font-medium">
                       {p.name}
                     </td>
@@ -312,6 +342,7 @@ export default function InventoryClient({
             {products.length > 0 && (
               <tfoot>
                 <tr className="bg-gray-50 border-t-2 border-gray-200">
+                  <td className="px-4 py-3"></td>
                   <td className="px-4 py-3 font-bold text-gray-900">Ukupno</td>
                   <td className="px-4 py-3"></td>
                   <td className="px-4 py-3"></td>
@@ -325,6 +356,77 @@ export default function InventoryClient({
           </table>
         </div>
       </div>
+
+      {/* Pagination controls */}
+      {products.length > 0 && (
+        <div className="no-print mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <span>
+              {pageSize === "all"
+                ? `Prikazano svih ${products.length}`
+                : `Prikazano ${startIndex + 1}–${Math.min(
+                    endIndex,
+                    products.length
+                  )} od ${products.length}`}
+            </span>
+            <span className="text-gray-300">|</span>
+            <label className="flex items-center gap-1.5">
+              <span>Po strani:</span>
+              <select
+                value={pageSize === "all" ? "all" : String(pageSize)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setPageSize(v === "all" ? "all" : Number(v));
+                  setPage(1);
+                }}
+                className="px-2 py-1 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="all">Sve</option>
+              </select>
+            </label>
+          </div>
+          {pageSize !== "all" && totalPages > 1 && (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPage(1)}
+                disabled={currentPage === 1}
+                className="px-2.5 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                «
+              </button>
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Prethodna
+              </button>
+              <span className="px-3 py-1.5 text-sm text-gray-600">
+                Strana {currentPage} / {totalPages}
+              </span>
+              <button
+                onClick={() =>
+                  setPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={currentPage === totalPages}
+                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Sledeca
+              </button>
+              <button
+                onClick={() => setPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className="px-2.5 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                »
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Add Product Modal */}
       <Modal
