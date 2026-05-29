@@ -35,17 +35,27 @@ export default function InventoryClient({
     0
   );
 
+  // --- Search ---
+  const [search, setSearch] = useState("");
+  const filteredProducts = search.trim()
+    ? products.filter((p) =>
+        p.name.toLowerCase().includes(search.trim().toLowerCase())
+      )
+    : products;
+
   // --- Pagination ---
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number | "all">(25);
 
   const totalPages =
-    pageSize === "all" ? 1 : Math.max(1, Math.ceil(products.length / pageSize));
+    pageSize === "all"
+      ? 1
+      : Math.max(1, Math.ceil(filteredProducts.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const startIndex = pageSize === "all" ? 0 : (currentPage - 1) * pageSize;
   const endIndex =
-    pageSize === "all" ? products.length : startIndex + pageSize;
-  const visibleProducts = products.slice(startIndex, endIndex);
+    pageSize === "all" ? filteredProducts.length : startIndex + pageSize;
+  const visibleProducts = filteredProducts.slice(startIndex, endIndex);
 
   const handlePrint = () => {
     const prevPage = page;
@@ -252,6 +262,35 @@ export default function InventoryClient({
         </div>
       </div>
 
+      {/* Search */}
+      <div className="no-print mb-3">
+        <div className="relative">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Pretrazi po nazivu..."
+            className="w-full px-3 py-2.5 pr-9 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearch("");
+                setPage(1);
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded"
+              aria-label="Obrisi pretragu"
+            >
+              ×
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
@@ -277,13 +316,15 @@ export default function InventoryClient({
               </tr>
             </thead>
             <tbody>
-              {products.length === 0 ? (
+              {filteredProducts.length === 0 ? (
                 <tr>
                   <td
                     colSpan={6}
                     className="text-center py-12 text-gray-400"
                   >
-                    Nema proizvoda u magacinu
+                    {products.length === 0
+                      ? "Nema proizvoda u magacinu"
+                      : `Nema rezultata za "${search}"`}
                   </td>
                 </tr>
               ) : (
@@ -358,16 +399,16 @@ export default function InventoryClient({
       </div>
 
       {/* Pagination controls */}
-      {products.length > 0 && (
+      {filteredProducts.length > 0 && (
         <div className="no-print mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <span>
               {pageSize === "all"
-                ? `Prikazano svih ${products.length}`
+                ? `Prikazano svih ${filteredProducts.length}`
                 : `Prikazano ${startIndex + 1}–${Math.min(
                     endIndex,
-                    products.length
-                  )} od ${products.length}`}
+                    filteredProducts.length
+                  )} od ${filteredProducts.length}`}
             </span>
             <span className="text-gray-300">|</span>
             <label className="flex items-center gap-1.5">
