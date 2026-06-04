@@ -26,6 +26,7 @@ model Product {
   auditLogs        AuditLog[]
   deliveryItems    DeliveryItem[]
   calculationItems CalculationItem[]
+  nivelacijaItems  NivelacijaItem[]
 }
 
 model AuditLog {
@@ -100,4 +101,34 @@ model CalculationItem {
   sellingPriceVat   Float
   sellingPriceUnit  Float
   note              String?
+}
+
+model Nivelacija {
+  id            String           @id @default(cuid())
+  number        String           @unique
+  dateIssued    DateTime
+  affectsStock  Boolean          @default(false)
+  workplace     String?
+  department    String?
+  taxpayerCode  String?
+  activityCode  String?
+  signedBy      String?
+  items         NivelacijaItem[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
+
+model NivelacijaItem {
+  id           String     @id @default(cuid())
+  nivelacijaId String
+  nivelacija   Nivelacija @relation(fields: [nivelacijaId], references: [id], onDelete: Cascade)
+  productId    String?
+  product      Product?   @relation(fields: [productId], references: [id])
+  articleCode  String?
+  productName  String
+  unit         String     @default("kom")
+  quantity     Int
+  oldPrice     Float
+  newPrice     Float
+  note         String?
 }

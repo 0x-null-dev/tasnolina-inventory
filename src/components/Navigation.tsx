@@ -11,6 +11,7 @@ const navItems = [
   { href: "/istorija", label: "Istorija" },
   { href: "/otpremnice", label: "Otpremnice" },
   { href: "/kalkulacije", label: "Kalkulacije" },
+  { href: "/nivelacije", label: "Nivelacije" },
 ];
 
 export default function Navigation() {

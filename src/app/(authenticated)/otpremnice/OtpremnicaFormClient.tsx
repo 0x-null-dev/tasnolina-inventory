@@ -76,7 +76,7 @@ export default function OtpremnicaFormClient({
   const [issuedBy, setIssuedBy] = useState(existing?.issuedBy || "");
   const [receivedBy, setReceivedBy] = useState(existing?.receivedBy || "");
   const [affectsStock, setAffectsStock] = useState(
-    existing?.affectsStock || false
+    existing ? existing.affectsStock : true
   );
 
   const initialItems: ItemRow[] = existing?.items
@@ -352,6 +352,9 @@ export default function OtpremnicaFormClient({
                             const updates: Partial<ItemRow> = {
                               productName: name,
                               productId: productId,
+                              unit: "kom",
+                              quantity: "",
+                              price: "",
                             };
                             if (price !== null) {
                               updates.price = String(price);
