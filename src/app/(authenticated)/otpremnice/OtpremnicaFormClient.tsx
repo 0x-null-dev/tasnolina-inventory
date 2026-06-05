@@ -293,7 +293,8 @@ export default function OtpremnicaFormClient({
               Da li ova otpremnica utice na magacin?
             </p>
             <p className="text-xs text-gray-500">
-              Ako je ukljuceno, kolicine i cene proizvoda ce biti azurirane
+              Ako je ukljuceno, kolicine proizvoda u magacinu ce biti uvecane.
+              Cena se NE menja — za promenu cene koristi nivelaciju.
             </p>
           </div>
         </label>

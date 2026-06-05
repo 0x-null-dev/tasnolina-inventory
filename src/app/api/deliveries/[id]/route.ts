@@ -154,7 +154,6 @@ export async function PUT(
             where: { id: item.productId },
             data: {
               amount: { increment: item.quantity },
-              price: item.price,
             },
           });
         }

@@ -106,7 +106,6 @@ export async function POST(request: Request) {
             where: { id: item.productId },
             data: {
               amount: { increment: item.quantity },
-              price: item.price,
             },
           });
         }
