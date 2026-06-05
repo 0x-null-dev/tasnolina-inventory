@@ -17,7 +17,7 @@ interface ItemRow {
   productName: string;
   unit: string;
   quantity: string;
-  pricePerUnit: string;
+  sellingPriceUnit: string;
   dependentCosts: string;
   priceDifference: string;
   note: string;
@@ -28,7 +28,6 @@ interface CalculationData {
   number: string;
   deliveryNumber: string | null;
   dateIssued: string;
-  affectsStock: boolean;
   signedBy: string;
   responsiblePerson: string;
   items: {
@@ -36,7 +35,7 @@ interface CalculationData {
     productName: string;
     unit: string;
     quantity: number;
-    pricePerUnit: number;
+    sellingPriceUnit: number;
     dependentCosts: number;
     priceDifference: number;
     note: string | null;
@@ -49,7 +48,7 @@ function emptyRow(): ItemRow {
     productName: "",
     unit: "kom",
     quantity: "",
-    pricePerUnit: "",
+    sellingPriceUnit: "",
     dependentCosts: "",
     priceDifference: "",
     note: "",
@@ -94,10 +93,6 @@ export default function KalkulacijaFormClient({
   const [responsiblePerson, setResponsiblePerson] = useState(
     existing?.responsiblePerson || ""
   );
-  const [affectsStock, setAffectsStock] = useState(
-    existing ? existing.affectsStock : true
-  );
-
   const year = dateIssued ? new Date(dateIssued + "T00:00:00").getFullYear() : new Date().getFullYear();
 
   const initialItems: ItemRow[] = existing?.items
@@ -106,7 +101,7 @@ export default function KalkulacijaFormClient({
         productName: item.productName,
         unit: item.unit,
         quantity: String(item.quantity),
-        pricePerUnit: String(item.pricePerUnit),
+        sellingPriceUnit: String(item.sellingPriceUnit),
         dependentCosts: item.dependentCosts ? String(item.dependentCosts) : "",
         priceDifference: item.priceDifference
           ? String(item.priceDifference)
@@ -133,20 +128,23 @@ export default function KalkulacijaFormClient({
     setItems((prev) => [...prev, ...createInitialRows(5)]);
   };
 
-  // Calculated columns for a row
+  // Calculated columns for a row.
+  // INPUT: sellingPriceUnit (col 13, N — prodajna cena po jed. mere SA PDV).
+  // Everything else derives backward, matching the Excel template.
   const calcRow = (row: ItemRow) => {
     const qty = parseFloat(row.quantity) || 0;
-    const price = parseFloat(row.pricePerUnit) || 0;
-    const dep = parseFloat(row.dependentCosts) || 0;
-    const diff = parseFloat(row.priceDifference) || 0;
+    const sellingPriceUnit = parseFloat(row.sellingPriceUnit) || 0; // col 13 (N) — input
+    const dep = parseFloat(row.dependentCosts) || 0; // col 7 (H) — input
+    const diff = parseFloat(row.priceDifference) || 0; // col 8 (I) — input
 
-    const goodsValue = qty * price; // col 6
-    const sellingPriceNoVat = goodsValue + dep + diff; // col 9
-    const vatAmount = sellingPriceNoVat * VAT_RATE; // col 11
-    const sellingPriceVat = sellingPriceNoVat + vatAmount; // col 12
-    const sellingPriceUnit = qty > 0 ? sellingPriceVat / qty : 0; // col 13
+    const sellingPriceVat = sellingPriceUnit * qty; // col 12 (M) = N × E
+    const sellingPriceNoVat = sellingPriceVat / (1 + VAT_RATE); // col 9 (J) = M / 1.2
+    const vatAmount = sellingPriceVat - sellingPriceNoVat; // col 11 (L) = M - J
+    const goodsValue = sellingPriceNoVat - dep - diff; // col 6 (G) = J - H - I
+    const pricePerUnit = qty > 0 ? goodsValue / qty : 0; // col 5 (F) = G / E
 
     return {
+      pricePerUnit,
       goodsValue,
       sellingPriceNoVat,
       vatAmount,
@@ -195,7 +193,7 @@ export default function KalkulacijaFormClient({
           productName: item.productName,
           unit: item.unit,
           quantity: parseInt(item.quantity, 10) || 0,
-          pricePerUnit: parseFloat(item.pricePerUnit) || 0,
+          pricePerUnit: c.pricePerUnit,
           goodsValue: c.goodsValue,
           dependentCosts: parseFloat(item.dependentCosts) || 0,
           priceDifference: parseFloat(item.priceDifference) || 0,
@@ -222,7 +220,6 @@ export default function KalkulacijaFormClient({
         number: number.trim(),
         deliveryNumber: deliveryNumber.trim() || null,
         dateIssued,
-        affectsStock,
         signedBy: signedBy.trim() || null,
         responsiblePerson: responsiblePerson.trim() || null,
         items: validItems,
@@ -380,27 +377,6 @@ export default function KalkulacijaFormClient({
         </div>
       </div>
 
-      {/* Affects stock toggle */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-4 no-print">
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={affectsStock}
-            onChange={(e) => setAffectsStock(e.target.checked)}
-            className="w-5 h-5 text-red-600 border-gray-300 rounded focus:ring-red-500"
-          />
-          <div>
-            <p className="text-sm font-medium text-gray-900">
-              Da li ova kalkulacija utice na magacin?
-            </p>
-            <p className="text-xs text-gray-500">
-              Ako je ukljuceno, kolicine i prodajne cene proizvoda ce biti
-              azurirane (cena po jed. sa PDV)
-            </p>
-          </div>
-        </label>
-      </div>
-
       {error && (
         <div className="mb-4 no-print">
           <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
@@ -427,10 +403,10 @@ export default function KalkulacijaFormClient({
                 <th className="text-right px-1 py-3 font-semibold text-gray-700 w-16 text-xs">
                   Kol.
                 </th>
-                <th className="text-right px-1 py-3 font-semibold text-gray-700 w-20 text-xs">
+                <th className="text-right px-1 py-3 font-semibold text-gray-500 w-20 text-xs">
                   Cena/jed
                 </th>
-                <th className="text-right px-1 py-3 font-semibold text-gray-700 w-24 text-xs">
+                <th className="text-right px-1 py-3 font-semibold text-gray-500 w-24 text-xs">
                   Vr. robe
                 </th>
                 <th className="text-right px-1 py-3 font-semibold text-gray-700 w-20 text-xs">
@@ -452,7 +428,7 @@ export default function KalkulacijaFormClient({
                   Pr.vr.sa
                 </th>
                 <th className="text-right px-1 py-3 font-semibold text-gray-700 w-22 text-xs">
-                  Pr.cena
+                  Pr.cena sa PDV
                 </th>
                 <th className="text-left px-1 py-3 font-semibold text-gray-700 w-20 text-xs">
                   Nap.
@@ -463,15 +439,15 @@ export default function KalkulacijaFormClient({
                 <th className="text-center px-1 py-1 text-[10px] text-gray-400">2</th>
                 <th className="text-center px-1 py-1 text-[10px] text-gray-400">3</th>
                 <th className="text-center px-1 py-1 text-[10px] text-gray-400">4</th>
-                <th className="text-center px-1 py-1 text-[10px] text-gray-400">5</th>
-                <th className="text-center px-1 py-1 text-[10px] text-gray-400">6=4x5</th>
+                <th className="text-center px-1 py-1 text-[10px] text-gray-400">5=6/4</th>
+                <th className="text-center px-1 py-1 text-[10px] text-gray-400">6=9-7-8</th>
                 <th className="text-center px-1 py-1 text-[10px] text-gray-400">7</th>
                 <th className="text-center px-1 py-1 text-[10px] text-gray-400">8</th>
-                <th className="text-center px-1 py-1 text-[10px] text-gray-400">9=6+7+8</th>
+                <th className="text-center px-1 py-1 text-[10px] text-gray-400">9=12/1.2</th>
                 <th className="text-center px-1 py-1 text-[10px] text-gray-400">10</th>
-                <th className="text-center px-1 py-1 text-[10px] text-gray-400">11=9x10</th>
-                <th className="text-center px-1 py-1 text-[10px] text-gray-400">12=9+11</th>
-                <th className="text-center px-1 py-1 text-[10px] text-gray-400">13=12/4</th>
+                <th className="text-center px-1 py-1 text-[10px] text-gray-400">11=12-9</th>
+                <th className="text-center px-1 py-1 text-[10px] text-gray-400">12=13x4</th>
+                <th className="text-center px-1 py-1 text-[10px] text-gray-400">13</th>
                 <th className="text-center px-1 py-1 text-[10px] text-gray-400">14</th>
               </tr>
             </thead>
@@ -500,13 +476,13 @@ export default function KalkulacijaFormClient({
                               productId: productId,
                               unit: "kom",
                               quantity: "",
-                              pricePerUnit: "",
+                              sellingPriceUnit: "",
                               dependentCosts: "",
                               priceDifference: "",
                               note: "",
                             };
                             if (price !== null) {
-                              updates.pricePerUnit = String(price);
+                              updates.sellingPriceUnit = String(price);
                             }
                             updateItem(i, updates);
                           }}
@@ -543,22 +519,11 @@ export default function KalkulacijaFormClient({
                         {item.quantity}
                       </span>
                     </td>
-                    <td className="px-1 py-1">
-                      <input
-                        type="number"
-                        value={item.pricePerUnit}
-                        onChange={(e) =>
-                          updateItem(i, { pricePerUnit: e.target.value })
-                        }
-                        min="0"
-                        step="0.01"
-                        className="w-full px-1 py-1 border border-gray-300 rounded text-xs text-right focus:outline-none focus:ring-1 focus:ring-red-500 no-print-input"
-                      />
-                      <span className="print-only text-xs text-right block">
-                        {item.pricePerUnit}
-                      </span>
+                    {/* Col 5: Cena po jed. mere (read-only) — izvedeno iz G/E */}
+                    <td className="px-1 py-1 text-right text-xs text-gray-700 whitespace-nowrap">
+                      {hasValues ? formatRSD(c.pricePerUnit) : ""}
                     </td>
-                    {/* Col 6: Vrednost robe = 4x5 (read-only) */}
+                    {/* Col 6: Vrednost robe = J - H - I (read-only) */}
                     <td className="px-1 py-1 text-right text-xs text-gray-900 whitespace-nowrap">
                       {hasValues ? formatRSD(c.goodsValue) : ""}
                     </td>
@@ -603,13 +568,25 @@ export default function KalkulacijaFormClient({
                     <td className="px-1 py-1 text-right text-xs text-gray-900 whitespace-nowrap">
                       {hasValues ? formatRSD(c.vatAmount) : ""}
                     </td>
-                    {/* Col 12: Prod. vr. sa PDV = 9+11 (read-only) */}
+                    {/* Col 12: Prod. vr. sa PDV = N × E (read-only) */}
                     <td className="px-1 py-1 text-right text-xs text-gray-900 font-medium whitespace-nowrap">
                       {hasValues ? formatRSD(c.sellingPriceVat) : ""}
                     </td>
-                    {/* Col 13: Prod. cena po jed. = 12/4 (read-only) */}
-                    <td className="px-1 py-1 text-right text-xs text-gray-900 font-medium whitespace-nowrap">
-                      {hasValues ? formatRSD(c.sellingPriceUnit) : ""}
+                    {/* Col 13: Prod. cena po jed. sa PDV — UNOS */}
+                    <td className="px-1 py-1">
+                      <input
+                        type="number"
+                        value={item.sellingPriceUnit}
+                        onChange={(e) =>
+                          updateItem(i, { sellingPriceUnit: e.target.value })
+                        }
+                        min="0"
+                        step="0.01"
+                        className="w-full px-1 py-1 border border-gray-300 rounded text-xs text-right font-medium focus:outline-none focus:ring-1 focus:ring-red-500 no-print-input"
+                      />
+                      <span className="print-only text-xs text-right block">
+                        {item.sellingPriceUnit}
+                      </span>
                     </td>
                     <td className="px-1 py-1">
                       <input

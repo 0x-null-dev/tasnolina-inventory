@@ -14,7 +14,6 @@ export default async function KalkulacijePage() {
     number: c.number,
     deliveryNumber: c.deliveryNumber,
     dateIssued: c.dateIssued.toISOString(),
-    affectsStock: c.affectsStock,
     totalSellingPriceVat: c.items.reduce(
       (sum, item) => sum + item.sellingPriceVat,
       0

@@ -22,7 +22,6 @@ export async function POST(request: Request) {
     number,
     deliveryNumber,
     dateIssued,
-    affectsStock,
     signedBy,
     responsiblePerson,
     items,
@@ -56,7 +55,7 @@ export async function POST(request: Request) {
         number: String(number).trim(),
         deliveryNumber: deliveryNumber?.trim() || null,
         dateIssued: new Date(dateIssued || new Date()),
-        affectsStock: !!affectsStock,
+        affectsStock: false,
         signedBy: signedBy?.trim() || null,
         responsiblePerson: responsiblePerson?.trim() || null,
         items: {
@@ -98,20 +97,6 @@ export async function POST(request: Request) {
       include: { items: true },
     });
 
-    if (affectsStock && validItems.length > 0) {
-      for (const item of validItems) {
-        if (item.productId) {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: {
-              amount: { increment: item.quantity },
-              price: item.sellingPriceUnit,
-            },
-          });
-        }
-      }
-    }
-
     return calc;
   });
 
@@ -125,7 +110,7 @@ export async function POST(request: Request) {
   await createAuditLog({
     userId: session.userId,
     action: "KALKULACIJA",
-    description: `Kreirana kalkulacija br. ${calculation.number}${affectsStock ? " (utice na magacin)" : ""}${itemsSummary ? ` — ${itemsSummary}` : ""}`,
+    description: `Kreirana kalkulacija br. ${calculation.number}${itemsSummary ? ` — ${itemsSummary}` : ""}`,
   });
 
   return NextResponse.json(calculation, { status: 201 });

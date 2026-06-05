@@ -48,7 +48,6 @@ export async function PUT(
     number,
     deliveryNumber,
     dateIssued,
-    affectsStock,
     signedBy,
     responsiblePerson,
     items,
@@ -78,20 +77,6 @@ export async function PUT(
       item.productName && item.productName.trim() && item.quantity > 0
   );
 
-  // Reverse old stock changes if previously affected
-  if (existing.affectsStock) {
-    for (const item of existing.items) {
-      if (item.productId) {
-        await prisma.product.update({
-          where: { id: item.productId },
-          data: {
-            amount: { decrement: item.quantity },
-          },
-        });
-      }
-    }
-  }
-
   const calculation = await prisma.$transaction(async (tx) => {
     await tx.calculationItem.deleteMany({
       where: { calculationId: params.id },
@@ -103,7 +88,7 @@ export async function PUT(
         number: String(number).trim(),
         deliveryNumber: deliveryNumber?.trim() || null,
         dateIssued: new Date(dateIssued || new Date()),
-        affectsStock: !!affectsStock,
+        affectsStock: false,
         signedBy: signedBy?.trim() || null,
         responsiblePerson: responsiblePerson?.trim() || null,
         items: {
@@ -145,27 +130,13 @@ export async function PUT(
       include: { items: true },
     });
 
-    if (affectsStock && validItems.length > 0) {
-      for (const item of validItems) {
-        if (item.productId) {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: {
-              amount: { increment: item.quantity },
-              price: item.sellingPriceUnit,
-            },
-          });
-        }
-      }
-    }
-
     return calc;
   });
 
   await createAuditLog({
     userId: session.userId,
     action: "KALKULACIJA",
-    description: `Izmenjena kalkulacija br. ${calculation.number}${affectsStock ? " (utice na magacin)" : ""}`,
+    description: `Izmenjena kalkulacija br. ${calculation.number}`,
   });
 
   return NextResponse.json(calculation);
@@ -190,19 +161,6 @@ export async function DELETE(
       { error: "Kalkulacija nije pronadjena" },
       { status: 404 }
     );
-  }
-
-  if (calculation.affectsStock) {
-    for (const item of calculation.items) {
-      if (item.productId) {
-        await prisma.product.update({
-          where: { id: item.productId },
-          data: {
-            amount: { decrement: item.quantity },
-          },
-        });
-      }
-    }
   }
 
   await prisma.calculation.delete({ where: { id: params.id } });

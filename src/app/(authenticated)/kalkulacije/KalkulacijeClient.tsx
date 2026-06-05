@@ -11,7 +11,6 @@ interface Calculation {
   number: string;
   deliveryNumber: string | null;
   dateIssued: string;
-  affectsStock: boolean;
   totalSellingPriceVat: number;
 }
 
@@ -102,9 +101,6 @@ export default function KalkulacijeClient({
                   <th className="text-right px-4 py-3 font-semibold text-gray-700">
                     Ukupno sa PDV
                   </th>
-                  <th className="text-center px-4 py-3 font-semibold text-gray-700">
-                    Magacin
-                  </th>
                   <th className="px-4 py-3 w-[1%]"></th>
                 </tr>
               </thead>
@@ -125,17 +121,6 @@ export default function KalkulacijeClient({
                     </td>
                     <td className="px-4 py-3 text-right text-gray-900 font-medium whitespace-nowrap">
                       {formatRSD(c.totalSellingPriceVat)} RSD
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      {c.affectsStock ? (
-                        <span className="inline-block px-2 py-0.5 rounded-md text-xs font-medium bg-green-100 text-green-700">
-                          Da
-                        </span>
-                      ) : (
-                        <span className="inline-block px-2 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-500">
-                          Ne
-                        </span>
-                      )}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-1 justify-end">
@@ -171,14 +156,6 @@ export default function KalkulacijeClient({
             Da li ste sigurni da zelite da obrisete kalkulaciju br.{" "}
             <strong>{deleteTarget?.number}</strong>?
           </p>
-          {deleteTarget?.affectsStock && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-              <p className="text-sm text-yellow-800">
-                Ova kalkulacija je uticala na magacin. Brisanjem ce se vratiti
-                kolicine proizvoda.
-              </p>
-            </div>
-          )}
           <div className="flex gap-2 pt-2">
             <button
               onClick={() => setDeleteTarget(null)}

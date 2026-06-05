@@ -28,7 +28,6 @@ export default async function EditKalkulacijaPage({
     number: calculation.number,
     deliveryNumber: calculation.deliveryNumber,
     dateIssued: calculation.dateIssued.toISOString(),
-    affectsStock: calculation.affectsStock,
     signedBy: calculation.signedBy || "",
     responsiblePerson: calculation.responsiblePerson || "",
     items: calculation.items.map((item) => ({
@@ -36,7 +35,7 @@ export default async function EditKalkulacijaPage({
       productName: item.productName,
       unit: item.unit,
       quantity: item.quantity,
-      pricePerUnit: item.pricePerUnit,
+      sellingPriceUnit: item.sellingPriceUnit,
       dependentCosts: item.dependentCosts,
       priceDifference: item.priceDifference,
       note: item.note,
